@@ -1,0 +1,95 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    @apply bg-slate-50 text-slate-900 antialiased;
+  }
+
+  body {
+    @apply m-0 min-w-[320px];
+  }
+
+  button,
+  input,
+  select,
+  textarea {
+    font: inherit;
+  }
+
+  button,
+  a,
+  input,
+  select,
+  textarea {
+    @apply focus-visible:outline-none focus-visible:ring-2
+      focus-visible:ring-brand-500 focus-visible:ring-offset-2;
+  }
+
+  button:disabled {
+    @apply cursor-not-allowed;
+  }
+
+  input[type="checkbox"] {
+    @apply h-4 w-4 rounded border-slate-300 accent-brand-600;
+  }
+
+  ::selection {
+    @apply bg-brand-100 text-brand-900;
+  }
+}
+
+@layer components {
+  .page-container {
+    @apply mx-auto w-full max-w-screen-2xl space-y-6;
+  }
+
+  .page-title {
+    @apply text-2xl font-bold tracking-tight text-slate-900;
+  }
+
+  .page-description {
+    @apply mt-1 text-sm leading-6 text-slate-500;
+  }
+
+  .panel {
+    @apply rounded-2xl border border-slate-200 bg-white shadow-panel;
+  }
+
+  .field-label {
+    @apply mb-1.5 block text-sm font-medium text-slate-700;
+  }
+
+  .field-input {
+    @apply block w-full rounded-lg border border-slate-300 bg-white
+      px-3 py-2.5 text-sm text-slate-900 placeholder:text-slate-400
+      disabled:bg-slate-100 disabled:text-slate-500;
+  }
+
+  .field-error {
+    @apply mt-1 text-xs text-red-600;
+  }
+
+  .field-help {
+    @apply mt-1 text-xs text-slate-500;
+  }
+
+  .text-link {
+    @apply font-medium text-brand-600 hover:text-brand-700;
+  }
+
+  .table-cell {
+    @apply px-4 py-3 text-left text-sm;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

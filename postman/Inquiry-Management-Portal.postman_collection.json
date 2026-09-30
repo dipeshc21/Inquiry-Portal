@@ -1,0 +1,733 @@
+{
+  "info": {
+    "_postman_id": "f973f52b-7b72-4aef-9e2a-3830595d8795",
+    "name": "Inquiry Management Portal",
+    "description": "Laravel inquiry portal API. Run Login first. Run public submission followed by Find submitted inquiry to select the newly created inquiry. Destructive operations are grouped at the end.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{token}}",
+        "type": "string"
+      }
+    ]
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:8000/api/v1" },
+    { "key": "token", "value": "" },
+    { "key": "loginEmail", "value": "admin@example.com" },
+    { "key": "loginPassword", "value": "password" },
+    { "key": "referenceNo", "value": "" },
+    { "key": "inquiryId", "value": "1" },
+    { "key": "agentId", "value": "3" },
+    { "key": "noteId", "value": "" },
+    { "key": "reminderId", "value": "" },
+    { "key": "attachmentId", "value": "" },
+    { "key": "userId", "value": "" },
+    { "key": "teamId", "value": "" },
+    { "key": "remindAt", "value": "" },
+    { "key": "uniqueSuffix", "value": "" }
+  ],
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "pm.request.headers.upsert({ key: 'Accept', value: 'application/json' });"
+        ]
+      }
+    },
+    {
+      "listen": "test",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "const contentType = pm.response.headers.get('Content-Type') || '';",
+          "if (contentType.includes('application/json')) {",
+          "  pm.test('Response uses the API envelope', function () {",
+          "    const body = pm.response.json();",
+          "    pm.expect(body.success).to.be.a('boolean');",
+          "    pm.expect(body.message).to.be.a('string');",
+          "  });",
+          "}"
+        ]
+      }
+    }
+  ],
+  "item": [
+    {
+      "name": "1. Authentication",
+      "item": [
+        {
+          "name": "Login",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{loginEmail}}\",\n  \"password\": \"{{loginPassword}}\"\n}"
+            },
+            "url": "{{baseUrl}}/auth/login"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Login succeeds', () => pm.response.to.have.status(200));",
+                  "if (pm.response.code === 200) {",
+                  "  pm.collectionVariables.set('token', pm.response.json().data.token);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Current user",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/auth/me"
+          }
+        }
+      ]
+    },
+    {
+      "name": "2. Public submission",
+      "item": [
+        {
+          "name": "Submit inquiry",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                { "key": "name", "value": "Jamie Carter", "type": "text" },
+                { "key": "email", "value": "jamie@example.com", "type": "text" },
+                { "key": "phone", "value": "+1 202 555 0134", "type": "text" },
+                { "key": "company", "value": "Carter Operations", "type": "text" },
+                { "key": "subject", "value": "Postman demonstration request", "type": "text" },
+                {
+                  "key": "message",
+                  "value": "Please arrange a demonstration for our sales and support teams.",
+                  "type": "text"
+                },
+                { "key": "source", "value": "campaign", "type": "text" },
+                { "key": "utm_source", "value": "google", "type": "text" },
+                { "key": "utm_medium", "value": "cpc", "type": "text" },
+                { "key": "utm_campaign", "value": "enterprise-demo", "type": "text" },
+                { "key": "honeypot", "value": "", "type": "text" },
+                {
+                  "key": "files[]",
+                  "type": "file",
+                  "src": [],
+                  "disabled": true,
+                  "description": "Select a permitted local file and enable this field."
+                }
+              ]
+            },
+            "url": "{{baseUrl}}/public/inquiries"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Inquiry is created', () => pm.response.to.have.status(201));",
+                  "if (pm.response.code === 201) {",
+                  "  pm.collectionVariables.set('referenceNo', pm.response.json().data.reference_no);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Find submitted inquiry",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/inquiries?q={{referenceNo}}&per_page=15"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "  const reference = pm.collectionVariables.get('referenceNo');",
+                  "  const inquiry = pm.response.json().data.find(item => item.reference_no === reference);",
+                  "  pm.test('Submitted inquiry is found', () => pm.expect(inquiry).to.exist);",
+                  "  if (inquiry) pm.collectionVariables.set('inquiryId', inquiry.id);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "3. Inquiries and dashboard",
+      "item": [
+        {
+          "name": "List inquiries",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/inquiries?page=1&per_page=15&sort_by=created_at&sort_dir=desc"
+          }
+        },
+        {
+          "name": "List filtered inquiries",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/inquiries?status[]=new&status[]=qualified&source[]=campaign&priority=medium&per_page=15"
+          }
+        },
+        {
+          "name": "Get inquiry detail",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/inquiries/{{inquiryId}}"
+          }
+        },
+        {
+          "name": "Update inquiry",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"subject\": \"Enterprise demonstration requested\",\n  \"company\": \"Carter Operations\",\n  \"priority\": \"high\"\n}"
+            },
+            "url": "{{baseUrl}}/inquiries/{{inquiryId}}"
+          }
+        },
+        {
+          "name": "Change status",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"qualified\",\n  \"note\": \"Requirements confirmed during the introductory call.\"\n}"
+            },
+            "url": "{{baseUrl}}/inquiries/{{inquiryId}}/status"
+          }
+        },
+        {
+          "name": "Get assignable agents",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/users/assignable"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "  const agents = pm.response.json().data;",
+                  "  if (agents.length) pm.collectionVariables.set('agentId', agents[0].id);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Assign inquiry",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"assigned_to\": {{agentId}}\n}"
+            },
+            "url": "{{baseUrl}}/inquiries/{{inquiryId}}/assign"
+          }
+        },
+        {
+          "name": "Unassign inquiry",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"assigned_to\": null\n}"
+            },
+            "url": "{{baseUrl}}/inquiries/{{inquiryId}}/assign"
+          }
+        },
+        {
+          "name": "Export filtered CSV",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/inquiries/export?status[]=qualified"
+          }
+        },
+        {
+          "name": "Export selected inquiry CSV",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/inquiries/export?ids[]={{inquiryId}}"
+          }
+        },
+        {
+          "name": "Dashboard statistics",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/dashboard/stats"
+          }
+        },
+        {
+          "name": "Inquiry activity",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/inquiries/{{inquiryId}}/activity?page=1&per_page=30"
+          }
+        }
+      ]
+    },
+    {
+      "name": "4. Messages and notes",
+      "item": [
+        {
+          "name": "List messages",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/inquiries/{{inquiryId}}/messages?per_page=30"
+          }
+        },
+        {
+          "name": "Send staff reply",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"body\": \"Thank you for your inquiry. We can arrange a demonstration this week.\"\n}"
+            },
+            "url": "{{baseUrl}}/inquiries/{{inquiryId}}/messages"
+          }
+        },
+        {
+          "name": "List notes",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/inquiries/{{inquiryId}}/notes?per_page=15"
+          }
+        },
+        {
+          "name": "Create note",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"body\": \"Customer is evaluating a multi-team deployment.\"\n}"
+            },
+            "url": "{{baseUrl}}/inquiries/{{inquiryId}}/notes"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "  pm.collectionVariables.set('noteId', pm.response.json().data.id);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Update note",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"body\": \"Customer confirmed a phased rollout across three teams.\"\n}"
+            },
+            "url": "{{baseUrl}}/notes/{{noteId}}"
+          }
+        }
+      ]
+    },
+    {
+      "name": "5. Reminders",
+      "item": [
+        {
+          "name": "List inquiry reminders",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/inquiries/{{inquiryId}}/reminders"
+          }
+        },
+        {
+          "name": "Create reminder",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.collectionVariables.set('remindAt', new Date(Date.now() + 86400000).toISOString());"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "  pm.collectionVariables.set('reminderId', pm.response.json().data.id);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Follow up on demonstration availability\",\n  \"remind_at\": \"{{remindAt}}\"\n}"
+            },
+            "url": "{{baseUrl}}/inquiries/{{inquiryId}}/reminders"
+          }
+        },
+        {
+          "name": "My upcoming reminders",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/reminders/upcoming?status=upcoming&per_page=15"
+          }
+        },
+        {
+          "name": "My overdue reminders",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/reminders/upcoming?status=overdue&per_page=15"
+          }
+        },
+        {
+          "name": "Complete reminder",
+          "request": {
+            "method": "PATCH",
+            "url": "{{baseUrl}}/reminders/{{reminderId}}/complete"
+          }
+        },
+        {
+          "name": "My completed reminders",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/reminders/upcoming?status=completed&per_page=15"
+          }
+        }
+      ]
+    },
+    {
+      "name": "6. Attachments - select a file before running",
+      "item": [
+        {
+          "name": "Upload attachment",
+          "request": {
+            "method": "POST",
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "files[]",
+                  "type": "file",
+                  "src": [],
+                  "disabled": true,
+                  "description": "Select a local PDF, DOC, DOCX, JPG, JPEG, or PNG and enable this field."
+                }
+              ]
+            },
+            "url": "{{baseUrl}}/inquiries/{{inquiryId}}/attachments"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "  const files = pm.response.json().data;",
+                  "  if (files.length) pm.collectionVariables.set('attachmentId', files[0].id);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Download attachment",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/attachments/{{attachmentId}}/download"
+          }
+        }
+      ]
+    },
+    {
+      "name": "7. Administration",
+      "item": [
+        {
+          "name": "List users",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/users?page=1&per_page=15"
+          }
+        },
+        {
+          "name": "List teams",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/teams?page=1&per_page=15"
+          }
+        },
+        {
+          "name": "Create team",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.collectionVariables.set('uniqueSuffix', String(Date.now()));"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "  pm.collectionVariables.set('teamId', pm.response.json().data.id);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Postman Team {{uniqueSuffix}}\"\n}"
+            },
+            "url": "{{baseUrl}}/teams"
+          }
+        },
+        {
+          "name": "Get team",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/teams/{{teamId}}"
+          }
+        },
+        {
+          "name": "Update team",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Updated Postman Team {{uniqueSuffix}}\"\n}"
+            },
+            "url": "{{baseUrl}}/teams/{{teamId}}"
+          }
+        },
+        {
+          "name": "Create user",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Postman Agent\",\n  \"email\": \"postman-{{uniqueSuffix}}@example.com\",\n  \"password\": \"ExamplePassword123\",\n  \"password_confirmation\": \"ExamplePassword123\",\n  \"role\": \"agent\",\n  \"team_id\": {{teamId}},\n  \"is_active\": true\n}"
+            },
+            "url": "{{baseUrl}}/users"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "  pm.collectionVariables.set('userId', pm.response.json().data.id);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get user",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/users/{{userId}}"
+          }
+        },
+        {
+          "name": "Update user",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Updated Postman Agent\",\n  \"is_active\": false\n}"
+            },
+            "url": "{{baseUrl}}/users/{{userId}}"
+          }
+        },
+        {
+          "name": "Global activity log",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/activity-logs?page=1&per_page=15"
+          }
+        },
+        {
+          "name": "Filtered activity log",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/activity-logs?inquiry_id={{inquiryId}}&action=status_changed"
+          }
+        },
+        {
+          "name": "Get assignment settings",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/settings/assignment"
+          }
+        },
+        {
+          "name": "Update assignment settings",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"auto_assign\": true,\n  \"strategy\": \"round_robin\"\n}"
+            },
+            "url": "{{baseUrl}}/settings/assignment"
+          }
+        }
+      ]
+    },
+    {
+      "name": "8. Destructive operations and logout - run intentionally",
+      "item": [
+        {
+          "name": "Delete note",
+          "request": {
+            "method": "DELETE",
+            "url": "{{baseUrl}}/notes/{{noteId}}"
+          }
+        },
+        {
+          "name": "Delete reminder",
+          "request": {
+            "method": "DELETE",
+            "url": "{{baseUrl}}/reminders/{{reminderId}}"
+          }
+        },
+        {
+          "name": "Delete attachment",
+          "request": {
+            "method": "DELETE",
+            "url": "{{baseUrl}}/attachments/{{attachmentId}}"
+          }
+        },
+        {
+          "name": "Delete created user",
+          "request": {
+            "method": "DELETE",
+            "url": "{{baseUrl}}/users/{{userId}}"
+          }
+        },
+        {
+          "name": "Delete created team",
+          "request": {
+            "method": "DELETE",
+            "url": "{{baseUrl}}/teams/{{teamId}}"
+          }
+        },
+        {
+          "name": "Soft delete inquiry",
+          "request": {
+            "method": "DELETE",
+            "url": "{{baseUrl}}/inquiries/{{inquiryId}}"
+          }
+        },
+        {
+          "name": "Logout",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/auth/logout"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "  pm.collectionVariables.set('token', '');",
+                  "}"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

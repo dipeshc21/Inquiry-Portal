@@ -1,0 +1,65 @@
+server {
+    listen 80;
+    server_name api.inquiry.example.com;
+
+    root /var/www/inquiry-portal/backend/public;
+    index index.php;
+
+    charset utf-8;
+    client_max_body_size 20m;
+
+    add_header X-Content-Type-Options "nosniff" always;
+    add_header Referrer-Policy "strict-origin-when-cross-origin" always;
+
+    # For production, terminate HTTPS at the load balancer or replace this
+    # listener with the appropriate TLS configuration.
+
+    # Block direct access through the public storage symlink.
+    # Attachment downloads must pass through Sanctum and inquiry policies.
+    location = /storage/attachments {
+        deny all;
+    }
+
+    location ^~ /storage/attachments/ {
+        deny all;
+    }
+
+    location / {
+        try_files $uri $uri/ /index.php?$query_string;
+    }
+
+    location = /favicon.ico {
+        access_log off;
+        log_not_found off;
+    }
+
+    location = /robots.txt {
+        access_log off;
+        log_not_found off;
+    }
+
+    location = /index.php {
+        include fastcgi_params;
+
+        fastcgi_pass unix:/run/php/php8.2-fpm.sock;
+        fastcgi_param SCRIPT_FILENAME $realpath_root$fastcgi_script_name;
+        fastcgi_param DOCUMENT_ROOT $realpath_root;
+        fastcgi_param HTTP_PROXY "";
+
+        fastcgi_hide_header X-Powered-By;
+        fastcgi_read_timeout 120s;
+
+        fastcgi_param PHP_VALUE "upload_max_filesize=5M
+post_max_size=20M
+max_file_uploads=3";
+    }
+
+    # Only Laravel's front controller is executable.
+    location ~ \.php$ {
+        return 404;
+    }
+
+    location ~ /\.(?!well-known).* {
+        deny all;
+    }
+}
