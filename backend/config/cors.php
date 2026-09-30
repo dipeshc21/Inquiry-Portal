@@ -16,24 +16,15 @@ return [
         env('FRONTEND_URL', 'http://localhost:5173'),
     ],
 
-    'allowed_origins_patterns' => [],
-
-    'allowed_headers' => [
-        'Accept',
-        'Authorization',
-        'Content-Type',
-        'Origin',
-        'X-Requested-With',
+    'allowed_origins_patterns' => [
+        '#^https://.*\.vercel\.app$#',
     ],
 
-    'exposed_headers' => [
-        'Content-Disposition',
-        'Retry-After',
-        'X-RateLimit-Limit',
-        'X-RateLimit-Remaining',
-    ],
+    'allowed_headers' => ['*'],
 
-    'max_age' => 600,
+    'exposed_headers' => ['Content-Disposition'],
+
+    'max_age' => 0,
 
     'supports_credentials' => false,
 ];
