@@ -64,7 +64,7 @@ class AssignmentService
                 ->orderByDesc('last_assigned_at')
                 ->value('last_assigned_at');
 
-            $assignedAt = now();
+            $assignedAt = now()->startOfSecond();
 
             if ($latest !== null) {
                 $previous = \Carbon\CarbonImmutable::parse($latest);

@@ -9,7 +9,7 @@ class InquiryCollection extends ResourceCollection
 {
     public $collects = InquiryResource::class;
 
-    public static $wrap = null;
+    public static $wrap = 'data';
 
     public function toArray(Request $request): array
     {

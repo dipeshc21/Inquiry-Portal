@@ -1,0 +1,19 @@
+# Secrets and local runtimes — never commit
+.env
+.env.*
+!.env.example
+.local/
+*.sql
+*.sql.gz
+
+# Dependencies and build output
+node_modules/
+vendor/
+dist/
+
+# Archives and editor/OS files
+*.zip
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db

@@ -1,0 +1,4 @@
+* text=auto
+*.sh text eol=lf
+backend/deploy/cloud/* text eol=lf
+backend/Dockerfile text eol=lf

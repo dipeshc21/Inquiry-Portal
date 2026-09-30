@@ -22,6 +22,7 @@ return Application::configure(basePath: dirname(__DIR__))
         apiPrefix: 'api/v1',
     )
     ->withMiddleware(function (Middleware $middleware): void {
+        $middleware->redirectGuestsTo('/login');
         $middleware->alias([
             'active' => EnsureUserIsActive::class,
             'role' => RoleMiddleware::class,
@@ -46,6 +47,10 @@ return Application::configure(basePath: dirname(__DIR__))
         ) {
             if (! $request->is('api/*') && ! $request->expectsJson()) {
                 return null;
+            }
+
+            if ($exception instanceof \Illuminate\Http\Exceptions\HttpResponseException) {
+                return $exception->getResponse();
             }
 
             $status = 500;

@@ -942,5 +942,3 @@ Back up the MySQL database and `storage/app/public/attachments` together.
 
 No automatic permanent purge of soft-deleted inquiries or attachment retention
 policy is included. Define these according to the deployment's requirements.
-#   I n q u i r y - P o r t a l  
- 
