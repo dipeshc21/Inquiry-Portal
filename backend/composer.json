@@ -33,7 +33,7 @@
     },
     "scripts": {
         "pre-autoload-dump": [
-            "@php -r \"foreach (['bootstrap/cache', 'storage/app/private', 'storage/app/public/attachments', 'storage/framework/cache/data', 'storage/framework/sessions', 'storage/framework/views', 'storage/logs'] as $directory) { if (!is_dir($directory)) { mkdir($directory, 0775, true); } }\""
+            "@php -r \"foreach (['bootstrap/cache', 'storage/app/private', 'storage/app/public/attachments', 'storage/framework/cache/data', 'storage/framework/sessions', 'storage/framework/views', 'storage/logs'] as \\$directory) { if (!is_dir(\\$directory)) { mkdir(\\$directory, 0775, true); } }\""
         ],
         "post-autoload-dump": [
             "Illuminate\\Foundation\\ComposerScripts::postAutoloadDump",
