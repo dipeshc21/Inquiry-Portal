@@ -21,7 +21,9 @@ return [
 
     'allowed_origins' => $origins,
 
-    'allowed_origins_patterns' => [],
+    'allowed_origins_patterns' => [
+        '#^https://inquiry-portal-[a-z0-9]+-assures-projects\.vercel\.app$#',
+    ],
 
     'allowed_headers' => ['Accept', 'Authorization', 'Content-Type', 'X-Requested-With'],
 
